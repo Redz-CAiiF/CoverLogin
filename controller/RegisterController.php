@@ -2,9 +2,14 @@
 
 class RegisterController {
     private $viewRegister = "view/registerModal.php";
-    private $successPath = "success.php";
-    private $errorPath = "index.php";
+    /*private $successPath = "success.php";
+    private $errorPath = "index.php";*/
     private $modelUser = "model/DAOuser.php";
+    
+    
+    private static function loadPupupController(){
+        include_once ("controller/popupController.php"); /* gestione popup */
+    }
 
     public function loadPage(){
         include ($this->viewRegister);
@@ -22,24 +27,30 @@ class RegisterController {
         require_once $this->modelUser;
     }
 
+    //viene usata per encodare in formato json un array tra due stringhe
+    private function JsonEncoder($arr){
+        return "registerController".json_encode($arr)."registerController";
+    }
+
     public function check(){
+        self::loadPupupController();
         // controllo quando il model è finito
         if(isset($_POST['submit'])){ //controllo per sicurezza
             //register logic here
             session_start();
             $this->requireDaoUser();
 
-            $user = new User(null,$_POST['user-DocumentoIdentita'],$_POST['user-Username'],$_POST['user-password'],$_POST['user-Telefono'],$_POST['user-Nome'],$_POST['user-Cognome'],$_POST['user-email'],$_POST['user-Fotografia']);
+            $user = new User(null,$_POST['user_DocumentoIdentita'],$_POST['user_username'],hash('sha256',$_POST['user_password']),$_POST['user_phonenumber'],$_POST['user_name'],$_POST['user_surname'],$_POST['user_email'],$_POST['user_photo']);
 
             if(count(getUsers(array('email'=>$user->Email))) >= 1){//ho un riscontro qundi esiste gia un utente con quella mail
-                $popup = 'Mail already used';
+                popupController::setPopup('Mail already used');
                 //include the view
-                $this->loadErrorPage($popup);
+                echo $this->JsonEncoder(array('status' => false));
             } else {
                 if(count(getUsers(array('username'=>$user->Username))) >= 1){//ho un riscontro qundi esiste gia un utente con quel username
-                    $popup = 'Username already used';
+                    popupController::setPopup('Username already used');
                     //include the view
-                    $this->loadErrorPage($popup);
+                    echo $this->JsonEncoder(array('status' => false));
                 } else {
                     //procedo ad inserire l'utente nel database
                     $result = insertUser($user); //inserire l'utente
@@ -48,17 +59,16 @@ class RegisterController {
                     $_SESSION['password'] = $user->Password;
                     
                     if($result === false){
-                        $popup = ':( Something bad happend';
-                        $this->loadErrorPage($popup);//include la view register
+                        popupController::setPopup(':( Something bad happend');
+                        echo $this->JsonEncoder(array('status' => false));
                     }else {
-                        //echo("utente inserito");
-                        header("Location: ".$this->successPath); die();//apre la nuova pagina
+                        echo $this->JsonEncoder(array('status' => true));
+                        //die();//apre la nuova pagina
                     }
                 }
             }
         } else {
-            $this->loadPage("error incorrect program logic"); //non è passato per la logica corretta
-            //the passed message is only for debug
+            echo $this->JsonEncoder(array('status' => false)); //non è passato per la logica corretta
         }
     }
 

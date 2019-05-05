@@ -107,7 +107,16 @@
         </footer>
     </div>
     <script>
+        function loadPopup(){
+            $.post("index.php?controller=popupController&action=load",{},// obtain the popup message popup
+                function (data, status) {
+                    $("#popup_loader").html(data);
+                });
+        }
+
         $(document).ready(function () {
+            
+
             $("#loginModalLoader").click(function () {
                 $(this).prepend("<span class='spinner-border spinner-border-sm spinner_loader'></span>");
                 $(this).attr("disabled", "disabled");//disabling button prevent double press
@@ -140,10 +149,9 @@
                         $("#registerModalLoader").removeAttr("disabled");
                     });
             });
-            $.post("index.php?controller=popupController&action=load",{},// da sistemare il sistema di popup
-                function (data, status) {
-                    $("#popup_loader").html(data);
-                });
+            
+            //at start
+            loadPopup();
                 
         });
     </script>

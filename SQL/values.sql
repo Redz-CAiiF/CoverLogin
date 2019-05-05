@@ -1,0 +1,1 @@
+-- error wrong sql script
